@@ -99,6 +99,8 @@ export function getPackagePatterns(
 
 /**
  * Convert glob pattern to RegExp
+ * Glob patterns always use forward slashes, so the regex uses '/' as the separator.
+ * Callers must normalize paths to forward slashes before testing.
  */
 function globToRegExp(pattern: string): RegExp {
   const regexPattern = pattern
@@ -106,6 +108,13 @@ function globToRegExp(pattern: string): RegExp {
     .replace(/\*/g, '[^/]*')
     .replace(/\?/g, '.');
   return new RegExp(`^${regexPattern}$`);
+}
+
+/**
+ * Normalize path separators to forward slashes for cross-platform glob matching
+ */
+function normalizeSeparators(filePath: string): string {
+  return filePath.replace(/\\/g, '/');
 }
 
 /**
@@ -136,7 +145,8 @@ function resolveGlobPattern(pattern: string, workspaceRoot: string): string[] {
 
   const regex = globToRegExp(pattern);
   const folders = getFolders(baseDir);
-  const candidates = folders.map(f => path.join(...baseDirs, f));
+  // Use forward slashes for regex matching regardless of OS path separator
+  const candidates = folders.map(f => normalizeSeparators(path.join(...baseDirs, f)));
 
   return candidates
     .filter(c => regex.test(c))

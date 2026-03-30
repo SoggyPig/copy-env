@@ -142,7 +142,8 @@ export class CopyEnvManager {
     }
 
     const file = fs.readFileSync(filePath, 'utf-8');
-    const envs = file.split('\n');
+    // Normalize line endings to handle both LF (Unix/macOS) and CRLF (Windows)
+    const envs = file.replace(/\r\n/g, '\n').split('\n');
 
     for (const line of envs) {
       const trimmedLine = line.trim();
@@ -183,8 +184,9 @@ export class CopyEnvManager {
    * @returns The resolved absolute file path
    *
    * Path resolution rules:
-   * - If the path is an absolute path, it's resolved from workspaceRoot
+   * - Paths starting with '/' are treated as workspace-root-relative (cross-platform convention)
    *   Example: '/config/env' -> '{workspaceRoot}/config/env'
+   * - Native OS absolute paths (e.g. 'C:\foo' on Windows) are used as-is
    * - Otherwise, it's treated as relative to basePath
    *   Example: '../shared/env' -> '{basePath}/../shared/env'
    */
@@ -193,8 +195,17 @@ export class CopyEnvManager {
     basePath: string,
     workspaceRoot: string,
   ): string {
+    // Paths starting with '/' are a cross-platform convention for workspace-root-relative paths.
+    // We must not rely on path.isAbsolute() alone because on Windows, '/foo' is a
+    // drive-relative path and path.resolve(workspaceRoot, '/foo') would yield 'C:\foo'
+    // instead of the intended '{workspaceRoot}\foo'.
+    if (filePath.startsWith('/')) {
+      return path.resolve(workspaceRoot, filePath.slice(1));
+    }
+
+    // Native absolute paths (e.g. 'C:\foo' on Windows) are used as-is
     if (path.isAbsolute(filePath)) {
-      return path.resolve(workspaceRoot, filePath);
+      return filePath;
     }
 
     // For relative paths, resolve from basePath (package directory)
