@@ -59,46 +59,76 @@ jobs:
 
       - name: Set version for publish
         id: set_version
+        env:
+          CUSTOM_VERSION: ${{ github.event.inputs.custom_version }}
+          VERSION_TYPE: ${{ github.event.inputs.version_type }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            if [ -n "$CUSTOM_VERSION" ]; then
               # 使用自定义版本号
-              npm version ${{ github.event.inputs.custom_version }} --no-git-tag-version
+              CURRENT_VERSION=$(node -p "require('./package.json').version")
+              if [ "$CUSTOM_VERSION" != "$CURRENT_VERSION" ]; then
+                npm version "$CUSTOM_VERSION" --no-git-tag-version
+              fi
             else
               # 根据选择的类型自动增加版本
-              npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+              npm version "$VERSION_TYPE" --no-git-tag-version
             fi
           fi
 
           # 获取当前版本用于后续步骤
-          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Publish to npm
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        run: npm publish --access public
-
-      - name: Commit version change (workflow_dispatch only)
+      - name: Commit version change and tag (workflow_dispatch only)
         if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           NEW_VERSION=${{ steps.set_version.outputs.version }}
+          RELEASE_TAG=${{ steps.set_version.outputs.tag }}
 
-          git add package.json
-          git commit -m "chore: bump version to ${NEW_VERSION} [skip ci]"
+          if git diff --quiet -- package.json; then
+            echo "package.json already at ${NEW_VERSION}; no version commit needed."
+          else
+            git add package.json
+            git commit -m "chore: bump version to ${NEW_VERSION} [skip ci]"
+            git push origin main
+          fi
 
           # 创建并推送 tag
-          git tag "v${NEW_VERSION}"
-          git push origin main
-          git push origin "v${NEW_VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${RELEASE_TAG} already exists; reusing it."
+          else
+            git tag "${RELEASE_TAG}"
+            git push origin "${RELEASE_TAG}"
+          fi
+
+      - name: Check npm version
+        id: npm_version
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          VERSION=${{ steps.set_version.outputs.version }}
+
+          if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "published=true" >> $GITHUB_OUTPUT
+            echo "${PACKAGE_NAME}@${VERSION} is already published."
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to npm
+        if: steps.npm_version.outputs.published != 'true' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')))
+        run: npm publish --access public
 
       - name: Create GitHub Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && steps.set_version.outputs.tag || github.ref_name }}
+          name: Release ${{ github.event_name == 'workflow_dispatch' && steps.set_version.outputs.tag || github.ref_name }}
           body: |
             ## Changes in this release
 
@@ -112,11 +142,17 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Auto bump patch version after tag release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      - name: Auto bump patch version after release
+        if: steps.npm_version.outputs.published != 'true' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')))
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ github.event_name }}" == "push" ]; then
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+          fi
 
           # 自动增加 patch 版本号
           npm version patch --no-git-tag-version
