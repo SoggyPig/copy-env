@@ -424,7 +424,7 @@ copy-env 遵循智慧檢測和處理工作流程：
 
 ## 授權
 
-MIT © [HydratedPig](https://github.com/HydratedPig)
+MIT © [SoggyPig](https://github.com/SoggyPig)
 
 ## 貢獻
 
@@ -433,4 +433,4 @@ MIT © [HydratedPig](https://github.com/HydratedPig)
 ## 問題
 
 如果遇到任何問題，請在以下位置提交 issue：
-https://github.com/HydratedPig/copy-env/issues
+https://github.com/SoggyPig/copy-env/issues

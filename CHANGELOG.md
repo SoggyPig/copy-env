@@ -138,5 +138,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Node.js >= 16.0.0 required (published version)
 - Node.js >= 20.0.0 required (development)
 
-[1.0.1]: https://github.com/HydratedPig/copy-env/releases/tag/v1.0.1
-[1.0.0]: https://github.com/HydratedPig/copy-env/releases/tag/v1.0.0
+[1.0.1]: https://github.com/SoggyPig/copy-env/releases/tag/v1.0.1
+[1.0.0]: https://github.com/SoggyPig/copy-env/releases/tag/v1.0.0

@@ -137,7 +137,7 @@ export default {
 
 ```javascript
 // .copy-env.mjs
-export default async function() {
+export default async function () {
   const isProduction = process.env.NODE_ENV === 'production';
 
   return {
@@ -317,7 +317,7 @@ Or using a single RegExp pattern (in JavaScript config):
 export default {
   envExampleName: '.env.example',
   envName: '.env.local',
-  skipIfExists: /^(SECRET|API)_/  // Matches all variables starting with SECRET_ or API_
+  skipIfExists: /^(SECRET|API)_/ // Matches all variables starting with SECRET_ or API_
 };
 ```
 
@@ -338,7 +338,7 @@ Or mixing patterns in an array:
 export default {
   envExampleName: '.env.example',
   envName: '.env.local',
-  skipIfExists: [/^SECRET_/, "^API_TOKEN$", /CONFIG$/]  // Mix of RegExp and strings
+  skipIfExists: [/^SECRET_/, '^API_TOKEN$', /CONFIG$/] // Mix of RegExp and strings
 };
 ```
 
@@ -422,7 +422,7 @@ For each target directory (package or root):
 
 ## License
 
-MIT © [HydratedPig](https://github.com/HydratedPig)
+MIT © [SoggyPig](https://github.com/SoggyPig)
 
 ## Contributing
 
@@ -431,4 +431,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Issues
 
 If you encounter any problems, please file an issue at:
-https://github.com/HydratedPig/copy-env/issues
+https://github.com/SoggyPig/copy-env/issues

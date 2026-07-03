@@ -420,7 +420,7 @@ copy-env はスマートな検出と処理ワークフローに従います：
 
 ## ライセンス
 
-MIT © [HydratedPig](https://github.com/HydratedPig)
+MIT © [SoggyPig](https://github.com/SoggyPig)
 
 ## 貢献
 
@@ -429,4 +429,4 @@ MIT © [HydratedPig](https://github.com/HydratedPig)
 ## 問題
 
 問題が発生した場合は、以下で issue を報告してください：
-https://github.com/HydratedPig/copy-env/issues
+https://github.com/SoggyPig/copy-env/issues
