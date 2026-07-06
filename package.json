@@ -9,7 +9,7 @@
   "homepage": "https://github.com/SoggyPig/copy-env#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SoggyPig/copy-env.git"
+    "url": "https://github.com/SoggyPig/copy-env"
   },
   "bugs": {
     "url": "https://github.com/SoggyPig/copy-env/issues"
